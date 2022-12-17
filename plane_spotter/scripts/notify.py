@@ -37,11 +37,16 @@ class Config:
     adsb_backend: ADSBConfig
     notification_backend: NotifyConfig
 
+@dataclass
+class Airplane:
+    registration: str | None
+    icao_hex_id: str | None
 
 cs = ConfigStore.instance()
 cs.store(name="main", node=Config)
 cs.store(group="adsb_backend", name="adsbexchange", node=ADSBExchangeConfig)
 cs.store(group="notification_backend", name="twitter", node=Twitter)
+cs.store(name="airplane", node=Airplane)
 
 logger = get_logger(__name__)
 
@@ -69,9 +74,9 @@ def notify(cfg: Config) -> None:
 
     # N628TS
     # A835AF
-    response = adsb_backend.aircraft_last_position_by_hex_id(hex_id="A835AF").json()
+    response = adsb_backend.aircraft_last_position_by_hex_id(hex_id=cfg.airplane["icao_hex_id"]).json()
 
-    log.info(f"Elon plane last known location", lat=response["lat"], lon=response["lon"])
+    log.info(f"Plane last known location", lat=response["lat"], lon=response["lon"])
 
 if __name__ == "__main__":
     notify()
