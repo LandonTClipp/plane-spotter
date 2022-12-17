@@ -1,0 +1,28 @@
+[project]
+name = "plane-spotter"
+version = "0.0.0-alpha0"
+description = "Spots planes using ADS-B data and sends events to various backends"
+requires-python = ">=3.10"
+dependencies = [
+    "click",
+    "dynaconf",
+    "tweepy",
+    "requests",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black"
+]
+
+[tool.setuptools]
+py-modules = []
+include-package-data = true
+
+[tool.setuptools.package-data]
+"plane_spotter.data" = ["airport-codes.csv"]
+
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
