@@ -5,11 +5,12 @@ import haversine
 import pathlib
 
 AIRPORT_TYPE_BLACKLIST = set(('balloonport', 'closed', 'heliport', 'seaplane_base'))
+DEFAULT_PATH = pathlib.Path('plane_spotter/data/airport-codes.csv')
 
 class Geolocator:
   ''' Translates coordinates to the closest airport. '''
 
-  def __init__(self, airport_code_file: pathlib.Path='plane_spotter/data/airport-codes.csv') -> 'Geolocator':
+  def __init__(self, airport_code_file: pathlib.Path=DEFAULT_PATH) -> 'Geolocator':
     ''' Initializes a Geolocator object '''
     self.__airports = []
     # Add airport dict for each row in airport_code_file
