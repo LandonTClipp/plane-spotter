@@ -28,10 +28,13 @@ The configuration file must be named `notify.yaml`. You can specify an alternate
 ```yaml
 adsb_backend:
   api_hostname: "adsbexchange-com1.p.rapidapi.com"
-  api_key: "foobar"
+  api_key: foobar
 notification_backend:
   key_id: foo
   key_secret: bar
+airplane:
+  icao_hex_id: A835AF
+  registration: N628TS
 ```
 
 Example Run
