@@ -5,7 +5,7 @@ description = "Spots planes using ADS-B data and sends events to various backend
 requires-python = ">=3.10"
 dependencies = [
     "click",
-    "dynaconf",
+    "hydra-core",
     "tweepy",
     "requests",
 ]
