@@ -8,6 +8,7 @@ dependencies = [
     "hydra-core",
     "tweepy",
     "requests",
+    "structlog",
 ]
 
 [project.optional-dependencies]
