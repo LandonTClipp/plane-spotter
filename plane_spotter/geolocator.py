@@ -2,13 +2,14 @@ from typing import Any
 
 import csv
 import haversine
+import pathlib
 
 AIRPORT_TYPE_BLACKLIST = set(('balloonport', 'closed', 'heliport', 'seaplane_base'))
 
 class Geolocator:
   ''' Translates coordinates to the closest airport. '''
 
-  def __init__(self, airport_code_file: str='plane_spotter/data/airport-codes.csv') -> 'Geolocator':
+  def __init__(self, airport_code_file: pathlib.Path='plane_spotter/data/airport-codes.csv') -> 'Geolocator':
     ''' Initializes a Geolocator object '''
     self.__airports = []
     # Add airport dict for each row in airport_code_file
