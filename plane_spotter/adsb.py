@@ -1,11 +1,20 @@
-"""
-Classes for adsbexchange.com
-"""
+from abc import ABC, abstractmethod
 import requests
 from typing import Optional
 
 
-class ADSBExchange:
+class ADSB(ABC):
+    """
+    Abstract class for implementing a common interface to
+    some ADS-B backend.
+    """
+
+    @abstractmethod
+    def GET(self):
+        ...
+
+
+class ADSBExchange(ADSB):
     def __init__(self, key: str, hostname: str = "adsbexchange-com1.p.rapidapi.com"):
         self._hostname = hostname
         self._key = key
@@ -24,14 +33,15 @@ class ADSBExchange:
         if headers is None:
             headers = dict()
 
-        return requests.request("GET", self._url(path=path), headers={**self._headers(), **headers})
+        return requests.request(
+            "GET", self._url(path=path), headers={**self._headers(), **headers}
+        )
 
     def position_by_registration(self, registration: str) -> requests.Response:
         return self.GET(path=["registration", registration])
 
-
     def aircraft_by_callsign(self, callsign: str) -> requests.Response:
         return self.GET(path=["callsign", callsign])
-    
+
     def aircraft_last_position_by_hex_id(self, hex_id: str) -> requests.Response:
         return self.GET(path=["hex", hex_id])
