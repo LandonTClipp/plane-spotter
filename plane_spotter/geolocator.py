@@ -13,13 +13,7 @@ class Geolocator:
     self.__airports = []
     # Add airport dict for each row in airport_code_file
     with open(airport_code_file, 'r') as file:
-      reader = csv.reader(file)
-      headers = next(reader)
-      for line in reader:
-        airport = {}
-        # Convert row to dict
-        for key, value in zip(headers, line):
-          airport[key] = value
+      for airport in csv.DictReader(file):
         # Add it if it's not a blacklisted type
         if airport['type'] not in AIRPORT_TYPE_BLACKLIST:
           coordinates = airport['coordinates'].split(', ')
