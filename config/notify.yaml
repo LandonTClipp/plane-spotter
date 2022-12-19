@@ -1,0 +1,9 @@
+defaults:
+  - config_schema
+  - adsb_backend: adsbexchange
+  - notification_backend: twitter
+  - _self_
+
+airplane:
+  icao_hex_id: A835AF
+  registration: N628TS
