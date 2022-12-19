@@ -15,6 +15,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "black",
+    "mypy",
     "pytest",
     "pytest-cov",
     "testfixtures",

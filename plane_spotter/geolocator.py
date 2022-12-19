@@ -32,7 +32,7 @@ class Geolocator:
         self, coordinates: tuple[float, float], max_distance: float
     ) -> dict[str, Any] | None:
         """Finds the closest airport to any set of coordinates that is within
-        max_distance (in miles) and returns that airport as a dict of each element
+        max_distance (in kilometers) and returns that airport as a dict of each element
         in the airport_code_file passed in during initialization.
         If no airport is found, returns None."""
         closest = None
@@ -41,9 +41,10 @@ class Geolocator:
             distance = self.__distance(coordinates, airport["coordinates"])
             if distance <= closest_distance:
                 closest = airport
+                closest["distance_to_coordinates"] = distance
                 closest_distance = distance
         return closest
 
     def __distance(self, a: tuple[float, float], b: tuple[float, float]) -> float:
-        """Calculates the distance between 2 coordinates"""
-        return haversine.haversine(a, b, unit=haversine.Unit.MILES)
+        """Calculates the distance between 2 coordinates in Kilometers"""
+        return haversine.haversine(a, b, unit=haversine.Unit.KILOMETERS)
