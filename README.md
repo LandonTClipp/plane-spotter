@@ -37,7 +37,7 @@ Backends
 This package allows for different backends to be specified for the ADS-B data and notifications. By default, we use ADSBExchange and Twitter for these backends, respectively. As new backend implementations are created, you can explicitly specify which one you want on the command line like:
 
 ```
-python3 -m plane_spotter.scripts.notify+adsb_backend=adsbexchange +notification_backend=twitter
+python3 -m plane_spotter.scripts.notify +adsb_backend=adsbexchange +notification_backend=twitter
 ```
 
 Or by modifying the default values in your `notify.yaml` config file.
