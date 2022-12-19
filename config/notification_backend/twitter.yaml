@@ -1,0 +1,5 @@
+defaults:
+  - twitter_schema
+
+key_id: foo
+key_secret: bar

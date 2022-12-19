@@ -1,0 +1,5 @@
+defaults:
+  - adsbexchange_schema
+
+api_hostname: "adsbexchange-com1.p.rapidapi.com"
+api_key: 
