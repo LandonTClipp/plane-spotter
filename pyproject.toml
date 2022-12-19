@@ -10,11 +10,13 @@ dependencies = [
     "tweepy",
     "requests",
     "structlog",
+    "types-requests",
 ]
 
 [project.optional-dependencies]
 dev = [
     "black",
+    "flake8",
     "mypy",
     "pytest",
     "pytest-cov",

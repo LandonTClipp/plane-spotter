@@ -1,0 +1,6 @@
+defaults:
+  - twitter_selenium_schema
+
+key_id:
+key_secret:
+username:

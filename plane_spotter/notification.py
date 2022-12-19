@@ -1,15 +1,8 @@
 from abc import ABC, abstractmethod
+import structlog
 
 
 class NotificationBackend(ABC):
     @abstractmethod
-    def send(self, message: str):
+    def send(self, message: str, log: structlog.stdlib.BoundLogger):
         ...
-
-
-class TwitterClient(NotificationBackend):
-    def __init__(self):
-        pass
-
-    def send(self, message: str):
-        pass
