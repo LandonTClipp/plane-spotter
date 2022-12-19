@@ -7,7 +7,10 @@ from omegaconf import MISSING, OmegaConf
 from structlog import get_logger
 
 from plane_spotter.adsb import ADSB, ADSBExchange
+from plane_spotter.geolocator import Geolocator
 from plane_spotter.notification import NotificationBackend, TwitterClient
+from plane_spotter.package import airport_code_path
+
 
 @dataclass
 class ADSBConfig:
@@ -37,10 +40,12 @@ class Config:
     adsb_backend: ADSBConfig
     notification_backend: NotifyConfig
 
+
 @dataclass
 class Airplane:
     registration: str | None
     icao_hex_id: str | None
+
 
 cs = ConfigStore.instance()
 cs.store(name="main", node=Config)
@@ -61,10 +66,13 @@ def notify(cfg: Config) -> None:
 
     adsb_backend: ADSB
     notification_backend: NotificationBackend
+    geolocator = Geolocator(airport_code_file=airport_code_path())
 
     log.info("instantiating ADS-B backend")
     if cfg.adsb_backend["driver"] == "adsbexchange":
-        adsb_backend = ADSBExchange(key=cfg.adsb_backend["api_key"], hostname=cfg.adsb_backend["api_hostname"])
+        adsb_backend = ADSBExchange(
+            key=cfg.adsb_backend["api_key"], hostname=cfg.adsb_backend["api_hostname"]
+        )
     else:
         raise ValueError(f"backend not known: {cfg.adsb_backend['driver']}")
 
@@ -72,11 +80,22 @@ def notify(cfg: Config) -> None:
     if cfg.notification_backend["driver"] == "twitter":
         notification_backend = TwitterClient()
 
-    # N628TS
-    # A835AF
-    response = adsb_backend.aircraft_last_position_by_hex_id(hex_id=cfg.airplane["icao_hex_id"]).json()
+    response = adsb_backend.aircraft_last_position_by_hex_id(
+        hex_id=cfg.airplane["icao_hex_id"]
+    ).json()
+    lat = response["lat"]
+    lon = response["lon"]
+    log.info(f"Plane last known location", lat=lat, lon=lon)
 
-    log.info(f"Plane last known location", lat=response["lat"], lon=response["lon"])
+    nearest_airport = geolocator.lookup_airport(
+        coordinates=(lat, lon), max_distance=1.0
+    )
+    if nearest_airport is None:
+        log.info("not near any known airport")
+        return
+
+    log.info(nearest_airport)
+
 
 if __name__ == "__main__":
     notify()

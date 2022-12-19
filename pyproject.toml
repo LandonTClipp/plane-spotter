@@ -14,7 +14,10 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "black"
+    "black",
+    "pytest",
+    "pytest-cov",
+    "testfixtures",
 ]
 
 [tool.setuptools]
