@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 import json
+import os
 from typing import Any
 
 import hydra
@@ -12,11 +13,13 @@ from plane_spotter.geolocator import Geolocator
 from plane_spotter.notification import NotificationBackend, TwitterClient
 from plane_spotter.package import airport_code_path
 
+
 @dataclass
 class ADSBExchangeConfig:
     api_key: str = MISSING
     api_hostname: str = MISSING
     driver: str = "adsbexchange"
+
 
 @dataclass
 class Twitter:
@@ -30,6 +33,7 @@ class Airplane:
     registration: str | None = MISSING
     icao_hex_id: str | None = MISSING
 
+
 @dataclass
 class Config:
     defaults: list[Any] = field(default_factory=lambda: defaults)
@@ -37,12 +41,11 @@ class Config:
     adsb_backend: Any = MISSING
     airplane: Airplane = MISSING
     notification_backend: Any = MISSING
-    
 
 
 defaults = [
     {"notification_backend": "twitter"},
-    {"adsb_backend": "adsbexchange"},    
+    {"adsb_backend": "adsbexchange"},
 ]
 
 cs = ConfigStore.instance()
@@ -55,9 +58,12 @@ cs.store(name="airplane_schema", node=Airplane)
 logger = get_logger(__name__)
 
 
-@hydra.main(version_base=None, config_path="config", config_name="notify")
+@hydra.main(
+    version_base=None,
+    config_path=os.environ.get("PLANE_NOTIFY_CONFIG_PATH", "config"),
+    config_name="notify",
+)
 def notify(cfg: Config) -> None:
-    print(OmegaConf.to_yaml(cfg))
     missing_keys = OmegaConf.missing_keys(cfg)
     if missing_keys:
         raise RuntimeError(f"Got missing keys in config:\n{missing_keys}")

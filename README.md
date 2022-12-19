@@ -21,27 +21,22 @@ Successfully installed pip-22.3.1
 (ve) [ltclipp@landon-virtualbox plane-spotter]$ pip install -Ue .[dev]
 ```
 
-Example Config
----------------
-The configuration file must be named `notify.yaml`. You can specify an alternate directory through `--config-path`. `--config-path` must be the directory where the yaml file lives, not the path of the file itself.
+Setup
+------
 
-```yaml
-adsb_backend:
-  api_hostname: "adsbexchange-com1.p.rapidapi.com"
-  api_key: foobar
-notification_backend:
-  key_id: foo
-  key_secret: bar
-airplane:
-  icao_hex_id: A835AF
-  registration: N628TS
-```
+1. Rename the `config/` directory to `production_config/`. This is done so that the scaffolding provided in `config/` doesn't
+get committed to git and expose your secrets.
+2. Populate the `production_config/` files with your secret API keys as necessary.
+3. Then, source `env.sh` to initilize your environment
+
+Note: you can specify alternate config paths by setting the `PLANE_SPOTTER_CONFIG_PATH` environment variable, or by specifying the value on the command line using `--config-path`.
+
 
 Example Run
 ------------
 
 ```
-(ve) [ltclipp@landon-virtualbox plane-spotter]$ python3 -m plane_spotter.scripts.notify --config-path ~/git/LandonTClipp/plane-spotter/ +adsb_backend=adsbexchange +notification_backend=twitter
+(ve) [ltclipp@landon-virtualbox plane-spotter]$ python3 -m plane_spotter.scripts.notify+adsb_backend=adsbexchange +notification_backend=twitter
 2022-12-16 22:11:55 [info     ] starting                       adsb_backend=adsbexchange notification_backend=twitter
 2022-12-16 22:11:55 [info     ] instantiating ADS-B backend    adsb_backend=adsbexchange notification_backend=twitter
 2022-12-16 22:11:55 [info     ] instantiating notification backend adsb_backend=adsbexchange notification_backend=twitter

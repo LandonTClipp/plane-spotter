@@ -129,5 +129,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# config files with possible secrets
-*.yaml
+production_config/
