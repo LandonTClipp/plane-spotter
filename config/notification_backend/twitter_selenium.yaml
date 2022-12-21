@@ -3,4 +3,10 @@ defaults:
 
 key_id:
 key_secret:
+# Providing username/phone_number is used when Twitter provides
+# an "Unusual Activity" challenge prompt. All they want is the
+# username (your @ twitter handle) or phone_number to verify 
+# the activity is legit. I don't know how that verifies anything
+# but ¯\_(ツ)_/¯
 username:
+phone_number:
