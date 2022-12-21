@@ -1,20 +1,8 @@
-from abc import ABC, abstractmethod
 import requests
 from typing import Optional
 
 
-class ADSB(ABC):
-    """
-    Abstract class for implementing a common interface to
-    some ADS-B backend.
-    """
-
-    @abstractmethod
-    def GET(self):
-        ...
-
-
-class ADSBExchange(ADSB):
+class ADSBExchange:
     def __init__(self, key: str, hostname: str = "adsbexchange-com1.p.rapidapi.com"):
         self._hostname = hostname
         self._key = key

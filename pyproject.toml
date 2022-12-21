@@ -10,6 +10,7 @@ dependencies = [
     "tweepy",
     "requests",
     "structlog",
+    "types-requests",
 ]
 
 [project.optional-dependencies]

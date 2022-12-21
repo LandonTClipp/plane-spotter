@@ -2,4 +2,6 @@
 
 pytest --cov=plane_spotter ./tests/
 black . --check
-coverage report --fail-under=100
+mypy .
+coverage report 
+

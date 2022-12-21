@@ -1,9 +1,12 @@
 defaults:
   - config_schema
   - adsb_backend: adsbexchange
-  - notification_backend: twitter
-  - _self_
+  - notification_backend: twitter_selenium
+  
+  - override hydra/hydra_logging: disabled  
+  - override hydra/job_logging: disabled  
 
 airplane:
-  icao_hex_id: A835AF
-  registration: N628TS
+  icao_hex_id:
+  registration:
+

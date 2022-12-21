@@ -30,4 +30,4 @@ def test_lookup_airport(coordinates, distance, expected):
     geolocator = Geolocator(airport_code_file=airport_code_path())
     airport = geolocator.lookup_airport(coordinates=coordinates, max_distance=distance)
 
-    compare(expected=expected, actual=airport["name"] if airport is not None else None)
+    compare(expected=expected, actual=airport.name if airport is not None else None)
