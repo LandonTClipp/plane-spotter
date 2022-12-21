@@ -56,7 +56,7 @@ ADS-B Backends
 -----------------
 |name|description|
 |---|----------|
-| __adsb_exchange__ | This uses the RapidAPI backed for ADS-B Exchange: https://rapidapi.com/adsbx/api/adsbexchange-com1 This is the best API available for ADS-B data as it's incredibly simple to use and is well-maintained. This is the default choice. Access to the API requires a $10/month subscription. |
+| __adsb_exchange__ | This uses the RapidAPI backend for ADS-B Exchange: https://rapidapi.com/adsbx/api/adsbexchange-com1 This is the best API available for ADS-B data as it's incredibly simple to use and is well-maintained. This is the default choice. Access to the API requires a $10/month subscription. |
 
 
 
