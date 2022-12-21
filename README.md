@@ -28,11 +28,12 @@ Setup
 get committed to git and expose your secrets.
 2. Populate the `production_config/` files with your secret API keys as necessary.
 3. Then, source `env.sh` to initilize your environment
+4. Ensure that you have chromum installed in your environment
 
 Note: you can specify alternate config paths by setting the `PLANE_SPOTTER_CONFIG_PATH` environment variable, or by specifying the value on the command line using `--config-path`.
 
 Backends
----------
+=========
 
 This package allows for different backends to be specified for the ADS-B data and notifications. By default, we use ADSBExchange and Twitter for these backends, respectively. As new backend implementations are created, you can explicitly specify which one you want on the command line like:
 
@@ -42,8 +43,25 @@ python3 -m plane_spotter.scripts.notify +adsb_backend=adsbexchange +notification
 
 Or by modifying the default values in your `notify.yaml` config file.
 
+Notification Backends
+-----------------------
+
+|name|description|
+|---|----------|
+| __twitter_selenium__ | This backend uses selenium to open a chromium web browser. This is the default choice as using the official Twitter v2 API requires an Elevated Access service account, which are available only under explicit approval from Twitter. Selenium uses the Twitter front-end which only requires a simple user account. This can even be used on your personal account! |
+| __twitter_api__ | This backend has not been created yet. This will use the v2 Twitter REST API |
+
+
+ADS-B Backends
+-----------------
+|name|description|
+|---|----------|
+| __adsb_exchange__ | This uses the RapidAPI backed for ADS-B Exchange: https://rapidapi.com/adsbx/api/adsbexchange-com1 This is the best API available for ADS-B data as it's incredibly simple to use and is well-maintained. This is the default choice. Access to the API requires a $10/month subscription. |
+
+
+
 Example Run
-------------
+==============
 
 ```
 (ve) [ltclipp@landon-virtualbox plane-spotter]$ python3 -m plane_spotter.scripts.notify 
