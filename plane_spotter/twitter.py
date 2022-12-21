@@ -35,10 +35,6 @@ class TwitterSelenium(NotificationBackend):
         self._username = username
         self._sleep_interval = sleep_interval
 
-        logger.info(self._password)
-        logger.info(self._email)
-        logger.info(self._username)
-
     def __enter__(self):
         self._log.info("starting chromedriver")
         options = Options()

@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 import datetime
 import json
 import os
@@ -112,7 +112,7 @@ def _main_loop(
             continue
 
         log.info("Nearest airport info:")
-        log.info("\n" + json.dumps(nearest_airport, indent=4) + "\n")
+        log.info("\n" + json.dumps(asdict(nearest_airport), indent=4) + "\n")
 
         ident = nearest_airport.ident
         name = nearest_airport.name
