@@ -1,10 +1,11 @@
+import collections
 from dataclasses import asdict, dataclass, field
 import datetime
 import json
 import os
 from textwrap import dedent
 import time
-from typing import Any
+from typing import Any, Iterable
 
 import hydra
 from hydra.core.config_store import ConfigStore
@@ -12,7 +13,7 @@ from omegaconf import MISSING, OmegaConf
 from structlog import get_logger
 
 from plane_spotter.adsb import ADSBExchange
-from plane_spotter.geolocator import Geolocator
+from plane_spotter.geolocator import Airport, Geolocator
 from plane_spotter.notification import NotificationBackend
 from plane_spotter.package import airport_code_path
 from plane_spotter.twitter import TwitterSelenium as _TwitterSelenium
@@ -29,6 +30,7 @@ class ADSBExchangeConfig:
 class TwitterBase:
     key_id: str = MISSING
     key_secret: str = MISSING
+    dry_run: bool = True
     driver: str = MISSING
 
 
@@ -61,6 +63,7 @@ class Config:
     adsb_backend: Any = MISSING
     airplane: Airplane = MISSING
     notification_backend: Any = MISSING
+    loop_interval: int = 120
 
 
 defaults: list[Any] = []
@@ -78,11 +81,18 @@ cs.store(name="airplane_schema", node=Airplane)
 logger = get_logger(__name__)
 
 
+@dataclass
+class AirportDiscovery:
+    airport: Airport
+    discovery_time: datetime.datetime
+
+
 def _main_loop(
     adsb_backend: ADSBExchange,
     geolocator: Geolocator,
     notification_backend: NotificationBackend,
-    cfg: Config,
+    search_radius: int,
+    icao_hex_id: str,
     loop_interval: int = 120,
     num_loops: int = -1,
     log=logger,
@@ -93,49 +103,93 @@ def _main_loop(
     num_loops if set to a non-positive number will loop only that number of times.
     If it's set to zero or a negative number, it will loop infinitely.
     """
-    last_known_ident = None
+    last_landed_airport: AirportDiscovery | None = None
+    in_flight: bool = False
+    first_loop: bool = True
     cur_loop = 0
 
     while (cur_loop < num_loops) or num_loops <= 0:
-        response = adsb_backend.aircraft_last_position_by_hex_id(
-            hex_id=cfg.airplane.icao_hex_id
+        if not first_loop:
+            time.sleep(loop_interval)
+        first_loop = False
+
+        now = datetime.datetime.now(datetime.timezone.utc)
+
+        adsb_data = adsb_backend.aircraft_last_position_by_hex_id(
+            hex_id=icao_hex_id
         ).json()
-        lat = response["lat"]
-        lon = response["lon"]
+        log.info("adsb info:")
+        log.info(f"\n{json.dumps(adsb_data, indent=4)}\n")
+
+        lat = adsb_data["lat"]
+        lon = adsb_data["lon"]
         log.info(f"Plane last known location", lat=lat, lon=lon)
 
-        nearest_airport = geolocator.lookup_airport(
-            coordinates=(lat, lon), max_distance=cfg.search_radius
+        nearest_airport = AirportDiscovery(
+            airport=geolocator.lookup_airport(
+                coordinates=(lat, lon), max_distance=search_radius
+            ),
+            discovery_time=now,
         )
         if nearest_airport is None:
             log.info("not near any known airport")
             continue
 
-        log.info("Nearest airport info:")
-        log.info("\n" + json.dumps(asdict(nearest_airport), indent=4) + "\n")
+        log.info(
+            "Nearest airport info:\n"
+            + json.dumps(asdict(nearest_airport.airport), indent=4)
+            + "\n"
+        )
 
-        ident = nearest_airport.ident
-        name = nearest_airport.name
-        if ident != last_known_ident:
-            log.info("airplane spotted near new airport")
-            now = datetime.datetime.now(datetime.timezone.utc)
+        if last_landed_airport is None:
+            if adsb_data["alt_baro"] == "ground":
+                log.info("discovered first airport aircraft has landed at")
+                last_landed_airport = nearest_airport
+            else:
+                log.info("haven't discovered first landed airport")
+            continue
+        else:
+            log.info("last_landed_airport is not None")
+
+        if adsb_data["alt_baro"] != "ground":
+            if not in_flight:
+                message = "Aircraft has taken off!"
+                log.info(message)
+                notification_backend.send(message=message)
+                in_flight = True
+            else:
+                log.info("aircraft still in flight")
+            continue
+        else:
+            log.info("altimeter reporting ground")
+
+        last_landed_airport.airport.ident = "FOOBAR"
+        log.debug(f"nearest airport: {nearest_airport.airport.ident}")
+        log.debug(f"last landed airport: {last_landed_airport.airport.ident}")
+
+        if (
+            nearest_airport.airport.ident != last_landed_airport.airport.ident
+            and adsb_data["alt_baro"] == "ground"
+        ):
+            in_flight = False
+
+            log.info("airplane landed at airport")
             message = dedent(
                 f"""\
-            Airplane spotted near {name} at {now}
+            Airplane landed at {nearest_airport.airport.name} at {now}
             
-            Ident: {nearest_airport.ident}
-            Country: {nearest_airport.iso_country}
-            ISO Region: {nearest_airport.iso_region}
-            Municipality: {nearest_airport.municipality}
-            Distance To Airport (Km): {nearest_airport.distance_to_coordinates}
+            Source: {last_landed_airport.airport.ident}: {last_landed_airport.airport.name}
+            Destination: {nearest_airport.airport.ident}: {nearest_airport.airport.name}
+            Flight Time: {str(now - last_landed_airport.discovery_time)}
+            Source Region: {last_landed_airport.airport.iso_region}
+            Dest Region: {nearest_airport.airport.iso_region}
             """
             )
             notification_backend.send(message=message, log=log)
-            last_known_ident = ident
+            last_landed_airport = nearest_airport
         else:
             log.info("airplane hasn't moved")
 
-        time.sleep(loop_interval)
         if num_loops > 0:
             cur_loop += 1
 
@@ -175,6 +229,7 @@ def notify(cfg: Config) -> None:
             password=cfg.notification_backend.key_secret,
             phone_number=cfg.notification_backend.phone_number,
             username=cfg.notification_backend.username,
+            dry_run=cfg.notification_backend.dry_run,
         )
         notification_backend = twitter_selenium
     else:
@@ -182,11 +237,15 @@ def notify(cfg: Config) -> None:
 
     with twitter_selenium:
         twitter_selenium.login()
+        log.info("starting main loop")
         _main_loop(
             adsb_backend=adsb_backend,
             geolocator=geolocator,
             notification_backend=notification_backend,
-            cfg=cfg,
+            icao_hex_id=cfg.airplane.icao_hex_id,
+            search_radius=cfg.search_radius,
+            loop_interval=cfg.loop_interval,
+            log=log,
         )
 
 

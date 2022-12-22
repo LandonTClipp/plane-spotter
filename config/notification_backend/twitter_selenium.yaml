@@ -10,3 +10,6 @@ key_secret:
 # but ¯\_(ツ)_/¯
 username:
 phone_number:
+
+# Set this to False when you are ready to submit tweets
+dry_run: True

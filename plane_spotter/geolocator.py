@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Any
 
 import csv
@@ -61,7 +62,7 @@ class Geolocator:
                 closest = airport
                 closest.distance_to_coordinates = distance
                 closest_distance = distance
-        return closest
+        return deepcopy(closest)
 
     def __distance(self, a: tuple[float, float], b: tuple[float, float]) -> float:
         """Calculates the distance between 2 coordinates in Kilometers"""
