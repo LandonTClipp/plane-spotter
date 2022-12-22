@@ -1,7 +1,7 @@
 FROM python:3.10-alpine
 
 WORKDIR /usr/app/src
-COPY .. /usr/app/src
+COPY . /usr/app/src
 
 RUN apk upgrade && apk add chromium chromium-chromedriver
 RUN python3 -m venv ve &&  \
