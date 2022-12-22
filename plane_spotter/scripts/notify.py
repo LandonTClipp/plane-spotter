@@ -163,7 +163,6 @@ def _main_loop(
         else:
             log.info("altimeter reporting ground")
 
-        last_landed_airport.airport.ident = "FOOBAR"
         log.debug(f"nearest airport: {nearest_airport.airport.ident}")
         log.debug(f"last landed airport: {last_landed_airport.airport.ident}")
 
