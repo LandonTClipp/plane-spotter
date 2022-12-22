@@ -130,3 +130,6 @@ dmypy.json
 .pyre/
 
 production_config/
+
+# Jetbrains IDE
+.idea/

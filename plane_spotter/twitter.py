@@ -80,7 +80,7 @@ class TwitterSelenium(NotificationBackend):
                 self._username if self._username is not None else self._phone_number
             )
             phone_or_username_field.send_keys(Keys.RETURN)
-        except selenium.common.exceptions.NoSuchElementException:
+        except selenium.common.exceptions.TimeoutException:
             log.info("unusual activity challenge not present")
             return
 
@@ -98,11 +98,18 @@ class TwitterSelenium(NotificationBackend):
 
         self.unusual_activity_challenge(log=log)
 
-        log.info("submitting password")
-        password = self._wait_until_clickable(
-            By.XPATH,
+        password_xpaths = [
             "/html/body/div/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div/div[3]/div/label/div/div[2]/div[1]/input",
-        )
+            "/html/body/div[1]/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div/div[3]/div/label/div/div[2]/div[1]/input",
+        ]
+
+        log.info("getting password input")
+
+        password = self._get_password(password_xpaths)
+        if password is None:
+            raise RuntimeError("Failed to get password element, check xpaths")
+
+        log.info("submitting password")
         password.send_keys(self._password)
         password.send_keys(Keys.RETURN)
 
@@ -143,3 +150,15 @@ class TwitterSelenium(NotificationBackend):
 
         log.info("tweet successful")
         self._sleep()
+
+    def _get_password(self, xpaths: list):
+        for path in xpaths:
+            try:
+                return self._get_password_element(path)
+            except selenium.common.exceptions.TimeoutException:
+                continue
+
+        return None
+
+    def _get_password_element(self, xpath: str):
+        return self._wait_until_clickable(By.XPATH, xpath)

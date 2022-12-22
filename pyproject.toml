@@ -11,6 +11,7 @@ dependencies = [
     "requests",
     "structlog",
     "types-requests",
+    "selenium",
 ]
 
 [project.optional-dependencies]
