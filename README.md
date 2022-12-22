@@ -92,3 +92,12 @@ Example Run
  adsb_backend=adsbexchange notification_backend=twitter
 ```
 
+Contributing
+============
+
+There are multiple ways you can contribute to the goal of tracking jets on Twitter (or anywhere!)
+
+1. Submit PRs for additional functionality you think would be useful (but please submit an issue to discuss the idea first)
+2. Buy me a coffee: https://www.buymeacoffee.com/elonjethydra
+   This helps with hosting and API costs!
+3. Send us credentials for another Twitter account you'd like us to run the bot on: elonjethydra@gmail.com
