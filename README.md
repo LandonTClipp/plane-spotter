@@ -32,6 +32,27 @@ get committed to git and expose your secrets.
 
 Note: you can specify alternate config paths by setting the `PLANE_SPOTTER_CONFIG_PATH` environment variable, or by specifying the value on the command line using `--config-path`.
 
+Docker
+------
+
+The application may be run in a docker container.
+
+To build the image:
+```
+docker build -t planespotter -f docker/Dockerfile .
+```
+
+Then, run the image. Make sure to mount your `production_config` directory into the container:
+```
+docker run \
+   -v $(pwd)/production_config:/usr/app/src/production_config \
+   -it planespotter run
+```
+
+The docker image has two commands that can be run:
+* `run` - will run the bot using the configuration in `production_config`
+* `sh` - will open a shell in the container for debugging purposes
+
 Backends
 =========
 

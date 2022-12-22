@@ -38,9 +38,11 @@ class TwitterSelenium(NotificationBackend):
     def __enter__(self):
         self._log.info("starting chromedriver")
         options = Options()
-        # options.add_argument("--headless")
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
         options.add_argument("--start-maximized")
         options.add_argument("--incognito")
+        options.add_argument("--disable-dev-shm-usage")
         self.webdriver = webdriver.Chrome(options=options)
         self._log.info("chrome driver started")
 
