@@ -3,10 +3,17 @@ from typing import Optional
 
 
 class ADSBExchange:
-    def __init__(self, key: str, hostname: str = "adsbexchange-com1.p.rapidapi.com"):
+    def __init__(
+        self,
+        key: str,
+        hostname: str = "adsbexchange-com1.p.rapidapi.com",
+        port=443,
+        https: bool = True,
+    ):
         self._hostname = hostname
         self._key = key
-        self._base_url = f"https://{self._hostname}/v2/"
+        protocol = "https" if https else "http"
+        self._base_url = f"{protocol}://{self._hostname}:{port}/v2/"
 
     def _headers(self) -> dict:
         return {

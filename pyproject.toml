@@ -17,9 +17,12 @@ dependencies = [
 dev = [
     "black",
     "flake8",
+    "freezegun",
     "mypy",
     "pytest",
     "pytest-cov",
+    "pytest-httpserver",
+    "pytest-structlog",
     "testfixtures",
 ]
 

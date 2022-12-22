@@ -13,8 +13,12 @@ from omegaconf import MISSING, OmegaConf
 from structlog import get_logger
 
 from plane_spotter.adsb import ADSBExchange
-from plane_spotter.geolocator import Airport, Geolocator
-from plane_spotter.notification import NotificationBackend
+from plane_spotter.geolocator import Airport, AirportDiscovery, Geolocator
+from plane_spotter.notification import (
+    NotificationBackend,
+    plane_landed_message,
+    plane_stationed_at_message,
+)
 from plane_spotter.package import airport_code_path
 from plane_spotter.twitter import TwitterSelenium as _TwitterSelenium
 
@@ -81,12 +85,6 @@ cs.store(name="airplane_schema", node=Airplane)
 logger = get_logger(__name__)
 
 
-@dataclass
-class AirportDiscovery:
-    airport: Airport
-    discovery_time: datetime.datetime
-
-
 def _main_loop(
     adsb_backend: ADSBExchange,
     geolocator: Geolocator,
@@ -109,6 +107,8 @@ def _main_loop(
     cur_loop = 0
 
     while (cur_loop < num_loops) or num_loops <= 0:
+        if num_loops > 0:
+            cur_loop += 1
         if not first_loop:
             time.sleep(loop_interval)
         first_loop = False
@@ -131,7 +131,7 @@ def _main_loop(
             ),
             discovery_time=now,
         )
-        if nearest_airport is None:
+        if nearest_airport.airport is None:
             log.info("not near any known airport")
             continue
 
@@ -145,8 +145,15 @@ def _main_loop(
             if adsb_data["alt_baro"] == "ground":
                 log.info("discovered first airport aircraft has landed at")
                 last_landed_airport = nearest_airport
+
+                message = plane_stationed_at_message(airport=nearest_airport)
+                notification_backend.send(message=message, log=log)
             else:
-                log.info("haven't discovered first landed airport")
+                in_flight = True
+                last_landed_airport = AirportDiscovery(
+                    airport=Airport(), discovery_time=now, unknown=True
+                )
+                log.info("aircraft is still in flight. Unknown last landed airport.")
             continue
         else:
             log.info("last_landed_airport is not None")
@@ -155,7 +162,7 @@ def _main_loop(
             if not in_flight:
                 message = "Aircraft has taken off!"
                 log.info(message)
-                notification_backend.send(message=message)
+                notification_backend.send(message=message, log=log)
                 in_flight = True
             else:
                 log.info("aircraft still in flight")
@@ -167,30 +174,21 @@ def _main_loop(
         log.debug(f"last landed airport: {last_landed_airport.airport.ident}")
 
         if (
-            nearest_airport.airport.ident != last_landed_airport.airport.ident
-            and adsb_data["alt_baro"] == "ground"
-        ):
+            last_landed_airport.unknown
+            or nearest_airport.airport.ident != last_landed_airport.airport.ident
+        ) and adsb_data["alt_baro"] == "ground":
             in_flight = False
 
             log.info("airplane landed at airport")
-            message = dedent(
-                f"""\
-            Airplane landed at {nearest_airport.airport.name} at {now}
-            
-            Source: {last_landed_airport.airport.ident}: {last_landed_airport.airport.name}
-            Destination: {nearest_airport.airport.ident}: {nearest_airport.airport.name}
-            Flight Time: {str(now - last_landed_airport.discovery_time)}
-            Source Region: {last_landed_airport.airport.iso_region}
-            Dest Region: {nearest_airport.airport.iso_region}
-            """
+            message = plane_landed_message(
+                source=last_landed_airport,
+                destination=nearest_airport,
+                hashtags=["#elonjet"],
             )
             notification_backend.send(message=message, log=log)
             last_landed_airport = nearest_airport
         else:
             log.info("airplane hasn't moved")
-
-        if num_loops > 0:
-            cur_loop += 1
 
 
 @hydra.main(
