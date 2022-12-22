@@ -80,11 +80,8 @@ class TwitterSelenium(NotificationBackend):
                 self._username if self._username is not None else self._phone_number
             )
             phone_or_username_field.send_keys(Keys.RETURN)
-        except selenium.common.exceptions.NoSuchElementException:
-            log.info("unusual activity challenge not present")
-            return
         except selenium.common.exceptions.TimeoutException:
-            log.info("unusual activity challenge timed out")
+            log.info("unusual activity challenge not present")
             return
 
     def login(self, log: structlog.stdlib.BoundLogger = logger):
@@ -101,12 +98,14 @@ class TwitterSelenium(NotificationBackend):
 
         self.unusual_activity_challenge(log=log)
 
-        password_xpath_1 = "/html/body/div/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div/div[3]/div/label/div/div[2]/div[1]/input"
-        password_xpath_2 = "/html/body/div[1]/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div/div[3]/div/label/div/div[2]/div[1]/input"
+        password_xpaths = [
+            "/html/body/div/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div/div[3]/div/label/div/div[2]/div[1]/input",
+            "/html/body/div[1]/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div/div[3]/div/label/div/div[2]/div[1]/input",
+        ]
 
         log.info("getting password input")
 
-        password = self._get_password([password_xpath_1, password_xpath_2])
+        password = self._get_password(password_xpaths)
         if password is None:
             raise RuntimeError("Failed to get password element, check xpaths")
 
@@ -157,8 +156,6 @@ class TwitterSelenium(NotificationBackend):
             try:
                 return self._get_password_element(path)
             except selenium.common.exceptions.TimeoutException:
-                continue
-            except selenium.common.exceptions.NoSuchElementException:
                 continue
 
         return None
