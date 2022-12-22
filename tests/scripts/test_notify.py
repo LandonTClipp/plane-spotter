@@ -162,9 +162,7 @@ def test_main_loop_airplane_starts_in_air_then_lands(
     landed_message = plane_landed_message(
         source=AirportDiscovery(airport=Airport(), discovery_time=now, unknown=True),
         destination=AirportDiscovery(
-            airport=Airport(
-                ident="00AA", name="Aero B Ranch Airport", iso_region="US-KS"
-            ),
+            airport=aero_b_ranch_airport(),
             discovery_time=now,
         ),
         hashtags=["#elonjet"],
