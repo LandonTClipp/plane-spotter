@@ -83,6 +83,9 @@ class TwitterSelenium(NotificationBackend):
         except selenium.common.exceptions.NoSuchElementException:
             log.info("unusual activity challenge not present")
             return
+        except selenium.common.exceptions.TimeoutException:
+            log.info("unusual activity challenge timed out")
+            return
 
     def login(self, log: structlog.stdlib.BoundLogger = logger):
         log.info("going to login page")
@@ -98,11 +101,16 @@ class TwitterSelenium(NotificationBackend):
 
         self.unusual_activity_challenge(log=log)
 
+        password_xpath_1 = "/html/body/div/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div/div[3]/div/label/div/div[2]/div[1]/input"
+        password_xpath_2 = "/html/body/div[1]/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div/div[3]/div/label/div/div[2]/div[1]/input"
+
+        log.info("getting password input")
+
+        password = self._get_password([password_xpath_1, password_xpath_2])
+        if password is None:
+            raise RuntimeError("Failed to get password element, check xpaths")
+
         log.info("submitting password")
-        password = self._wait_until_clickable(
-            By.XPATH,
-            "/html/body/div/div/div/div[1]/div/div/div/div/div/div/div[2]/div[2]/div/div/div[2]/div[2]/div[1]/div/div/div[3]/div/label/div/div[2]/div[1]/input",
-        )
         password.send_keys(self._password)
         password.send_keys(Keys.RETURN)
 
@@ -143,3 +151,17 @@ class TwitterSelenium(NotificationBackend):
 
         log.info("tweet successful")
         self._sleep()
+
+    def _get_password(self, xpaths: list):
+        for path in xpaths:
+            try:
+                return self._get_password_element(path)
+            except selenium.common.exceptions.TimeoutException:
+                continue
+            except selenium.common.exceptions.NoSuchElementException:
+                continue
+
+        return None
+
+    def _get_password_element(self, xpath: str):
+        return self._wait_until_clickable(By.XPATH, xpath)
