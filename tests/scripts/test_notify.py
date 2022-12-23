@@ -57,6 +57,10 @@ def aero_b_ranch_airport() -> Airport:
     return Airport(ident="00AA", name="Aero B Ranch Airport", iso_region="US-KS")
 
 
+def lowell_field() -> Airport:
+    return Airport(ident="00AK", name="Lowell Field", iso_region="US-AK")
+
+
 def test_main_loop_not_near_any_known_airport(
     notification_stub, adsb_exchange, geolocator, httpserver: HTTPServer, log
 ):
@@ -168,3 +172,75 @@ def test_main_loop_airplane_starts_in_air_then_lands(
         hashtags=["#elonjet"],
     )
     notification_stub.send.assert_called_once_with(message=landed_message, log=mock.ANY)
+
+
+@freeze_time("2022-01-01")
+def test_main_loop_airplane_full_flight(
+    notification_stub, geolocator, httpserver: HTTPServer, log
+):
+    now = datetime.datetime.now(datetime.timezone.utc)
+    adsb = ADSBExchange(
+        key="foo", hostname="localhost", port=httpserver.port, https=False
+    )
+
+    # 00AA
+    httpserver.expect_ordered_request("/v2/hex/BADC0DE/").respond_with_json(
+        {
+            "alt_baro": "ground",
+            "lat": 38.704022,
+            "lon": -101.473911,
+        }
+    )
+    httpserver.expect_ordered_request("/v2/hex/BADC0DE/").respond_with_json(
+        {
+            "alt_baro": 43000,
+            "lat": 38.704022,
+            "lon": -101.473911,
+        }
+    )
+    # Somewhere over montana
+    httpserver.expect_ordered_request("/v2/hex/BADC0DE/").respond_with_json(
+        {
+            "alt_baro": 43000,
+            "lat": 46.8797,
+            "lon": -110.3626,
+        }
+    )
+    # 00AK
+    httpserver.expect_ordered_request("/v2/hex/BADC0DE/").respond_with_json(
+        {
+            "alt_baro": "ground",
+            "lat": 59.94919968,
+            "lon": -151.695999146,
+        }
+    )
+
+    _main_loop(
+        adsb_backend=adsb,
+        geolocator=geolocator,
+        notification_backend=notification_stub,
+        search_radius=100,
+        icao_hex_id="BADC0DE",
+        loop_interval=0,
+        num_loops=4,
+    )
+
+    stationed_message = plane_stationed_at_message(
+        airport=AirportDiscovery(airport=aero_b_ranch_airport(), discovery_time=now)
+    )
+    in_flight_message = "Aircraft has taken off!"
+    landed_message = plane_landed_message(
+        source=AirportDiscovery(airport=aero_b_ranch_airport(), discovery_time=now),
+        destination=AirportDiscovery(
+            airport=lowell_field(),
+            discovery_time=now,
+        ),
+        hashtags=["#elonjet"],
+    )
+    notification_stub.send.assert_has_calls(
+        [
+            mock.call(message=stationed_message, log=mock.ANY),
+            mock.call(message=in_flight_message, log=mock.ANY),
+            mock.call(message=landed_message, log=mock.ANY),
+        ]
+    )

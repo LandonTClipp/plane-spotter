@@ -101,7 +101,11 @@ def _main_loop(
     num_loops if set to a non-positive number will loop only that number of times.
     If it's set to zero or a negative number, it will loop infinitely.
     """
-    last_landed_airport: AirportDiscovery | None = None
+    last_landed_airport = AirportDiscovery(
+        airport=Airport(),
+        discovery_time=datetime.datetime.now(datetime.timezone.utc),
+        unknown=True,
+    )
     in_flight: bool = False
     first_loop: bool = True
     cur_loop = 0
@@ -125,24 +129,30 @@ def _main_loop(
         lon = adsb_data["lon"]
         log.info(f"Plane last known location", lat=lat, lon=lon)
 
+        discovered_closest_airport = geolocator.lookup_airport(
+            coordinates=(lat, lon), max_distance=search_radius
+        )
         nearest_airport = AirportDiscovery(
-            airport=geolocator.lookup_airport(
-                coordinates=(lat, lon), max_distance=search_radius
-            ),
+            airport=discovered_closest_airport or Airport(),
             discovery_time=now,
+            unknown=discovered_closest_airport is None,
         )
-        if nearest_airport.airport is None:
+        if not nearest_airport.unknown:
+            log.info(
+                "Nearest airport info:\n"
+                + json.dumps(asdict(nearest_airport.airport), indent=4)
+                + "\n"
+            )
+        else:
             log.info("not near any known airport")
-            continue
 
-        log.info(
-            "Nearest airport info:\n"
-            + json.dumps(asdict(nearest_airport.airport), indent=4)
-            + "\n"
-        )
-
-        if last_landed_airport is None:
+        if (
+            not in_flight
+            and last_landed_airport.unknown
+            and not nearest_airport.unknown
+        ):
             if adsb_data["alt_baro"] == "ground":
+                in_flight = False
                 log.info("discovered first airport aircraft has landed at")
                 last_landed_airport = nearest_airport
 
@@ -156,16 +166,16 @@ def _main_loop(
                 log.info("aircraft is still in flight. Unknown last landed airport.")
             continue
         else:
-            log.info("last_landed_airport is not None")
+            log.info("last_landed_airport is unknown")
 
         if adsb_data["alt_baro"] != "ground":
             if not in_flight:
                 message = "Aircraft has taken off!"
                 log.info(message)
                 notification_backend.send(message=message, log=log)
-                in_flight = True
             else:
                 log.info("aircraft still in flight")
+            in_flight = True
             continue
         else:
             log.info("altimeter reporting ground")
@@ -174,9 +184,10 @@ def _main_loop(
         log.debug(f"last landed airport: {last_landed_airport.airport.ident}")
 
         if (
-            last_landed_airport.unknown
-            or nearest_airport.airport.ident != last_landed_airport.airport.ident
-        ) and adsb_data["alt_baro"] == "ground":
+            nearest_airport.airport.ident != last_landed_airport.airport.ident
+            and adsb_data["alt_baro"] == "ground"
+            and in_flight
+        ):
             in_flight = False
 
             log.info("airplane landed at airport")
