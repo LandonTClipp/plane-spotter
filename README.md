@@ -1,5 +1,17 @@
 # plane-spotter
 
+Active Accounts
+===============
+
+
+| Twitter Handle | Status | Created	| Suspended | Note |
+|----------------|--------|---------|-----------|------|
+| https://twitter.com/ElonJetHydra2	| ACTIVE | 2022-12-22 |
+| https://twitter.com/elonjethydra11 | SUSPENDED | 2022-12-19 | 2022-12-22 | Your account has been suspended for violation(s) of Twitter’s rules, specifically our policy regarding parody, newsfeed, commentary, and fan accounts. |
+
+Setup
+====== 
+
 Installation
 --------------
 
@@ -20,9 +32,6 @@ Installing collected packages: pip
 Successfully installed pip-22.3.1
 (ve) [ltclipp@landon-virtualbox plane-spotter]$ pip install -Ue .[dev]
 ```
-
-Setup
-------
 
 1. Rename the `config/` directory to `production_config/`. This is done so that the scaffolding provided in `config/` doesn't
 get committed to git and expose your secrets.
