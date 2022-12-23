@@ -26,16 +26,22 @@ class TwitterSelenium(NotificationBackend):
         phone_number: str | None = None,
         username: str | None = None,
         sleep_interval: int = 5,
+        dry_run: bool = True,
         log=logger,
     ):
         self._email = email
         self._password = password
-        self._log = log
+        self._log = log.bind(class_name="TwitterSelenium")
         self._phone_number = phone_number
         self._username = username
         self._sleep_interval = sleep_interval
+        self._dry_run = dry_run
 
     def __enter__(self):
+        if self._dry_run:
+            self._log.info("dry run of __enter__ method")
+            return
+
         self._log.info("starting chromedriver")
         options = Options()
         options.add_argument("--headless")
@@ -47,6 +53,9 @@ class TwitterSelenium(NotificationBackend):
         self._log.info("chrome driver started")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._dry_run:
+            self._log.info("dry run of __exit__ method")
+            return
         self.webdriver.quit()
         self.webdriver = None
 
@@ -87,7 +96,11 @@ class TwitterSelenium(NotificationBackend):
             return
 
     def login(self, log: structlog.stdlib.BoundLogger = logger):
+        if self._dry_run:
+            log.info("dry run of login method")
+            return
         log.info("going to login page")
+
         self.webdriver.get("https://twitter.com/login")
 
         email = self._wait_until_clickable(
@@ -121,20 +134,19 @@ class TwitterSelenium(NotificationBackend):
         """
         Submits a tweet. Chrome driver must be instantiated and login flow must be complete.
         """
+        if self._dry_run:
+            log.info("dry run of send method")
+            log.info("would have sent message:")
+            log.info(message)
+            return
+
         log.info("Writing text")
-        text_field_box = WebDriverWait(self.webdriver, 10).until(
-            expected_conditions.element_to_be_clickable(
-                (By.CLASS_NAME, "DraftEditor-root")
-            )
-        )
+        text_field_box = self._wait_until_clickable(By.CLASS_NAME, "DraftEditor-root")
         text_field_box.click()
 
-        text_field = self._wait().until(
-            expected_conditions.element_to_be_clickable(
-                (By.CLASS_NAME, "public-DraftEditorPlaceholder-root")
-            )
+        text_field = self._wait_until_clickable(
+            By.CLASS_NAME, "public-DraftEditorPlaceholder-root"
         )
-
         ActionChains(self.webdriver).move_to_element(text_field).send_keys(
             message
         ).perform()

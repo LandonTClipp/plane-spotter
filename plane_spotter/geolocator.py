@@ -1,3 +1,5 @@
+from copy import deepcopy
+import datetime
 from typing import Any
 
 import csv
@@ -11,19 +13,26 @@ DEFAULT_PATH = pathlib.Path("plane_spotter/data/airport-codes.csv")
 
 @dataclass
 class Airport:
-    ident: str
-    type: str
-    name: str
-    elevation_ft: str
-    continent: str
-    iso_country: str
-    iso_region: str
-    municipality: str
-    gps_code: str
-    iata_code: str
-    local_code: str
-    coordinates: list[float]
+    ident: str | None = None
+    type: str | None = None
+    name: str | None = None
+    elevation_ft: str | None = None
+    continent: str | None = None
+    iso_country: str | None = None
+    iso_region: str | None = None
+    municipality: str | None = None
+    gps_code: str | None = None
+    iata_code: str | None = None
+    local_code: str | None = None
+    coordinates: list[float] | None = None
     distance_to_coordinates: float = 0.0
+
+
+@dataclass
+class AirportDiscovery:
+    airport: Airport
+    discovery_time: datetime.datetime
+    unknown: bool = False
 
 
 class Geolocator:
@@ -61,7 +70,7 @@ class Geolocator:
                 closest = airport
                 closest.distance_to_coordinates = distance
                 closest_distance = distance
-        return closest
+        return deepcopy(closest)
 
     def __distance(self, a: tuple[float, float], b: tuple[float, float]) -> float:
         """Calculates the distance between 2 coordinates in Kilometers"""
