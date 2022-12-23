@@ -7,7 +7,7 @@ from plane_spotter.geolocator import AirportDiscovery
 
 
 def plane_landed_message(
-    source: AirportDiscovery, destination: AirportDiscovery, hashtags: list[str] = []
+    source: AirportDiscovery, destination: AirportDiscovery, hashtags: list[str]
 ) -> str:
     return dedent(
         f"""\
@@ -20,12 +20,12 @@ def plane_landed_message(
         Dest Region: {destination.airport.iso_region}
         Discovery Time: {source.discovery_time}
 
-        {' '.join(hashtags)}
+        
         """
     )
 
 
-def plane_stationed_at_message(airport: AirportDiscovery):
+def plane_stationed_at_message(airport: AirportDiscovery, hashtags: list[str]):
     return dedent(
         f"""\
                 Airplane is stationed at {airport.airport.name}
@@ -34,7 +34,7 @@ def plane_stationed_at_message(airport: AirportDiscovery):
                 Source Region: {airport.airport.iso_region}
                 Discovery Time: {airport.discovery_time}
 
-                #elonjet
+                {' '.join(hashtags)}
                 """
     )
 

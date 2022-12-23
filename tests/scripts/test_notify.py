@@ -6,7 +6,7 @@ from freezegun import freeze_time
 from plane_spotter.adsb import ADSBExchange
 from plane_spotter.geolocator import Airport, Geolocator
 from plane_spotter.notification import plane_landed_message, plane_stationed_at_message
-from plane_spotter.scripts.notify import _main_loop, AirportDiscovery
+from plane_spotter.scripts.notify import _main_loop, AirportDiscovery, HASHTAGS
 from pytest_httpserver import HTTPServer
 
 from tests.conftest import write_airport_csv
@@ -116,7 +116,8 @@ def test_main_loop_airplane_starts_at_airport(
         "level": "info",
     } in log.events
     message = plane_stationed_at_message(
-        airport=AirportDiscovery(airport=aero_b_ranch_airport(), discovery_time=now)
+        airport=AirportDiscovery(airport=aero_b_ranch_airport(), discovery_time=now),
+        hashtags=HASHTAGS,
     )
     notification_stub.send.assert_called_once_with(
         message=message,
@@ -169,7 +170,7 @@ def test_main_loop_airplane_starts_in_air_then_lands(
             airport=aero_b_ranch_airport(),
             discovery_time=now,
         ),
-        hashtags=["#elonjet"],
+        hashtags=HASHTAGS,
     )
     notification_stub.send.assert_called_once_with(message=landed_message, log=mock.ANY)
 
@@ -226,7 +227,8 @@ def test_main_loop_airplane_full_flight(
     )
 
     stationed_message = plane_stationed_at_message(
-        airport=AirportDiscovery(airport=aero_b_ranch_airport(), discovery_time=now)
+        airport=AirportDiscovery(airport=aero_b_ranch_airport(), discovery_time=now),
+        hashtags=HASHTAGS,
     )
     in_flight_message = "Aircraft has taken off!"
     landed_message = plane_landed_message(
@@ -235,7 +237,7 @@ def test_main_loop_airplane_full_flight(
             airport=lowell_field(),
             discovery_time=now,
         ),
-        hashtags=["#elonjet"],
+        hashtags=HASHTAGS,
     )
     notification_stub.send.assert_has_calls(
         [

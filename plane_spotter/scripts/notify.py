@@ -84,6 +84,8 @@ cs.store(name="airplane_schema", node=Airplane)
 
 logger = get_logger(__name__)
 
+HASHTAGS = ["#elonjet", "@elonjet", "@elonmusk", "@ElonJetNextDay"]
+
 
 def _main_loop(
     adsb_backend: ADSBExchange,
@@ -156,7 +158,9 @@ def _main_loop(
                 log.info("discovered first airport aircraft has landed at")
                 last_landed_airport = nearest_airport
 
-                message = plane_stationed_at_message(airport=nearest_airport)
+                message = plane_stationed_at_message(
+                    airport=nearest_airport, hashtags=HASHTAGS
+                )
                 notification_backend.send(message=message, log=log)
             else:
                 in_flight = True
@@ -194,7 +198,7 @@ def _main_loop(
             message = plane_landed_message(
                 source=last_landed_airport,
                 destination=nearest_airport,
-                hashtags=["#elonjet"],
+                hashtags=HASHTAGS,
             )
             notification_backend.send(message=message, log=log)
             last_landed_airport = nearest_airport
